@@ -74,9 +74,10 @@ def convert_dates(dates):
     converted_dates = []
     for date_str in dates:
         try:
-            date_obj = parser.parse(date_str)
+            date_obj = parser.parse(date_str, dayfirst=True)  # Specify dayfirst to align with your date format
             converted_dates.append(date_obj.strftime('%d/%m/%Y'))
         except ValueError:
+            # Skip the date if it's invalid
             continue
     return converted_dates
 
@@ -364,7 +365,8 @@ async def predict_intent(input_text: InputText):
     print("Loading into the model")
     # Extract entities
     dates = extract_dates(corrected_text)
-    meeting_date = convert_dates(dates)[0] if dates else None
+    converted_dates = convert_dates(dates)
+    meeting_date = converted_dates[0] if converted_dates else None
     #hall_name, hall_name_error = extract_hall_name(corrected_text)
     batch_no, batch_no_error = extract_batch_no(corrected_text)
     cab_name, cab_name_error = extract_cab_names(corrected_text)
