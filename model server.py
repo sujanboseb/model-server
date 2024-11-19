@@ -186,26 +186,32 @@ def extract_no_of_persons(input_text):
 
     return no_of_persons, no_of_persons_error
 
+
+
+# Time extraction and conversion with additional validation
 import re
 from datetime import datetime
 
-# Time extraction and conversion with additional validation
 def extract_times(input_text):
-    time_pattern = r'(\b\d{1,2}[:\d{2}]*\s*(?:am|pm|a\.m\.|p\.m\.|AM|PM|A\.M\.|P\.M\.)?\b|\b\d{1,2}\s*(?:to|TO)\s*\d{1,2}\b)'
+    # Regular expression to match times in the `h:mmam/pm` or `h:mmAM/PM` format, and "start to end" ranges
+    time_pattern = r'(\b\d{1,2}[:\d{2}]*\s*(?:am|pm|AM|PM)\b|\b\d{1,2}\s*to\s*\d{1,2}\b)'
+    
     matches = re.findall(time_pattern, input_text, re.IGNORECASE)
     times = []
     time_error = None
 
     for match in matches:
-        match = match.strip().lower()
+        match = match.strip().lower()  # Convert to lowercase to normalize
 
         if "to" in match:
+            # Handle ranges like "9 to 11"
             start, end = match.split("to")
             start_time = datetime.strptime(start.strip(), "%I").strftime("%H:00")
             end_time = datetime.strptime(end.strip(), "%I").strftime("%H:00")
             times.extend([start_time, end_time])
         else:
-            normalized_time = re.sub(r'\s+', '', match)
+            # Normalize and parse individual times
+            normalized_time = match.strip()
             try:
                 time_obj = datetime.strptime(normalized_time, "%I:%M%p")
             except ValueError:
@@ -225,12 +231,13 @@ def extract_times(input_text):
         start_time = times[0]
         end_time = times[1]
 
-        # Additional validation
-        current_time = datetime.now().strftime("%H:%M")
+        # Additional validation: ensure start time is less than end time
         if start_time >= end_time:
             time_error = "Error: Time format is not correct as meeting starting time is greater than ending time."
 
     return start_time, end_time, time_error
+
+
 
 def predict(input_text):
     # Focused prompt to instruct the model to classify input into a specific intent
